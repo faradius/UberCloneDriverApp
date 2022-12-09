@@ -2,6 +2,9 @@ package com.alex.uberclonedriverapp.activities
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.Drawable
 import android.location.Location
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
@@ -9,6 +12,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.alex.uberclonedriverapp.R
 import com.alex.uberclonedriverapp.databinding.ActivityMapBinding
 import com.alex.uberclonedriverapp.utils.Config
@@ -20,8 +24,7 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.*
 
 class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
     private val TAG = "LOCALIZACIÓN"
@@ -30,6 +33,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
     private var googleMap:GoogleMap? = null
     private var easyWayLocation:EasyWayLocation? = null
     private var myLocationLatLng: LatLng? = null
+    private var markerDriver: Marker? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,9 +78,38 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
         }
     }
 
+    private fun addMarker(){
+        val drawable = ContextCompat.getDrawable(applicationContext, R.drawable.uber_car)
+        val markerIcon = getMarkerFromDrawable(drawable!!)
+        if (markerDriver != null){
+            markerDriver?.remove() //No redibujar el icono
+        }
+
+        if (myLocationLatLng != null){
+            markerDriver = googleMap?.addMarker(
+                MarkerOptions()
+                    .position(myLocationLatLng!!)
+                    .anchor(0.5f,0.5f)
+                    .flat(true)
+                    .icon(markerIcon))
+        }
+    }
+
+    private fun getMarkerFromDrawable(drawable: Drawable): BitmapDescriptor{
+        val canvas = Canvas()
+        val bitmap = Bitmap.createBitmap(
+            70,
+            150,
+            Bitmap.Config.ARGB_8888
+        )
+        canvas.setBitmap(bitmap)
+        drawable.setBounds(0,0,70,150)
+        drawable.draw(canvas)
+        return BitmapDescriptorFactory.fromBitmap(bitmap)
+    }
+
     override fun onResume() {
         super.onResume()
-        easyWayLocation?.startLocation()
     }
 
     override fun onDestroy() {
@@ -86,6 +119,9 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
 
     override fun onMapReady(map: GoogleMap) {
         googleMap = map
+        googleMap?.uiSettings?.isZoomControlsEnabled = true
+        easyWayLocation?.startLocation()
+
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -96,13 +132,14 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
         ) {
             return
         }
-        googleMap?.isMyLocationEnabled = true
+        googleMap?.isMyLocationEnabled = false //Desactivar el marcador por defecto de google
     }
 
     override fun locationOn() {
 
     }
 
+    //Actualización de la posición en tiempo real
     override fun currentLocation(location: Location) {
         //Obteniendo la latitud y longitud de la posición actual
         myLocationLatLng = LatLng(location.latitude, location.longitude)
@@ -110,6 +147,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
         googleMap?.moveCamera(CameraUpdateFactory.newCameraPosition(
             CameraPosition.builder().target(myLocationLatLng!!).zoom(17f).build()
         ))
+
+        addMarker()
     }
 
     override fun locationCancelled() {
