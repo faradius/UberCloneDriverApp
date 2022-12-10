@@ -11,6 +11,7 @@ import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -59,6 +60,9 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION
         ))
+
+        binding.btnConnect.setOnClickListener { connectDriver() }
+        binding.btnDisconnect.setOnClickListener { disconnectDriver() }
     }
 
     val locationPermission = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()){ permission ->
@@ -66,17 +70,42 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
             when {
                 permission.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) -> {
                     Log.d(TAG, "Permiso concedido")
-                    easyWayLocation?.startLocation()
+//                    easyWayLocation?.startLocation()
                 }
                 permission.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false) -> {
                     Log.d(TAG, "Permiso concedido con limitación")
-                    easyWayLocation?.startLocation()
+//                    easyWayLocation?.startLocation()
                 }
                 else -> {
                     Log.d(TAG, "Permiso no concedido")
                 }
             }
         }
+    }
+
+    private fun disconnectDriver(){
+        easyWayLocation?.endUpdates()
+        if (myLocationLatLng != null){
+            showButtonConnect()
+        }
+    }
+
+    private fun connectDriver(){
+        easyWayLocation?.endUpdates()
+        easyWayLocation?.startLocation()
+        showButtonDisconnect()
+    }
+
+    private fun showButtonConnect(){
+        binding.btnDisconnect.visibility = View.GONE
+        binding.btnConnect.visibility = View.VISIBLE
+
+    }
+
+    private fun showButtonDisconnect(){
+        binding.btnDisconnect.visibility = View.VISIBLE
+        binding.btnConnect.visibility = View.GONE
+
     }
 
     private fun addMarker(){
@@ -121,7 +150,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
     override fun onMapReady(map: GoogleMap) {
         googleMap = map
         googleMap?.uiSettings?.isZoomControlsEnabled = true
-        easyWayLocation?.startLocation()
+//        easyWayLocation?.startLocation()
 
         if (ActivityCompat.checkSelfPermission(
                 this,
