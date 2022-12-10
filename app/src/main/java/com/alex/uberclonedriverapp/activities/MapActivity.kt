@@ -2,6 +2,7 @@ package com.alex.uberclonedriverapp.activities
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.Drawable
@@ -132,7 +133,21 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
         ) {
             return
         }
-        googleMap?.isMyLocationEnabled = false //Desactivar el marcador por defecto de google
+        //Desactivar el marcador por defecto de google
+        googleMap?.isMyLocationEnabled = false
+
+        try{
+            val success = googleMap?.setMapStyle(
+                MapStyleOptions.loadRawResourceStyle(this,R.raw.style)
+            )
+            
+            if (!success!!){
+                Log.d(TAG, "onMapReady: No se pudo encontrar el estilo")
+            }
+            
+        }catch (e: Resources.NotFoundException){
+            Log.d(TAG, "Error: ${e.toString()}")
+        }
     }
 
     override fun locationOn() {
