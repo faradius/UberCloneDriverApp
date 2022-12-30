@@ -17,6 +17,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.alex.uberclonedriverapp.R
 import com.alex.uberclonedriverapp.databinding.ActivityMapBinding
+import com.alex.uberclonedriverapp.fragments.ModalBottomSheetBooking
 import com.alex.uberclonedriverapp.models.Booking
 import com.alex.uberclonedriverapp.providers.AuthProvider
 import com.alex.uberclonedriverapp.providers.BookingProvider
@@ -45,6 +46,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
     private val geoProvider = GeoProvider()
     private val authProvider = AuthProvider()
     private val bookingProvider = BookingProvider()
+    private val modalBooking = ModalBottomSheetBooking()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -97,6 +99,10 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
         }
     }
 
+    private fun showModalBooking(){
+        modalBooking.show(supportFragmentManager, ModalBottomSheetBooking.TAG)
+    }
+
     private fun listenerBooking(){
         bookingListener = bookingProvider.getBooking().addSnapshotListener { snapshot, error ->
             if (error != null){
@@ -109,6 +115,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
                 if (snapshot.documents.size > 0){
                     val booking = snapshot.documents[0].toObject(Booking::class.java)
                     Log.d("FIRESTORE", "DATA: ${booking?.toJson()}")
+                    showModalBooking()
                 }
             }
         }
