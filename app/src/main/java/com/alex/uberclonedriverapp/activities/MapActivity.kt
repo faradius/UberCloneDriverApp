@@ -17,7 +17,9 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.alex.uberclonedriverapp.R
 import com.alex.uberclonedriverapp.databinding.ActivityMapBinding
+import com.alex.uberclonedriverapp.models.Booking
 import com.alex.uberclonedriverapp.providers.AuthProvider
+import com.alex.uberclonedriverapp.providers.BookingProvider
 import com.alex.uberclonedriverapp.providers.GeoProvider
 import com.alex.uberclonedriverapp.utils.Config
 import com.example.easywaylocation.EasyWayLocation
@@ -29,8 +31,10 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import com.google.firebase.firestore.ListenerRegistration
 
 class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
+    private var bookingListener: ListenerRegistration? = null
     private val TAG = "LOCALIZACIÓN"
 
     private lateinit var binding: ActivityMapBinding
@@ -40,6 +44,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
     private var markerDriver: Marker? = null
     private val geoProvider = GeoProvider()
     private val authProvider = AuthProvider()
+    private val bookingProvider = BookingProvider()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,8 +70,11 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
             Manifest.permission.ACCESS_COARSE_LOCATION
         ))
 
+        listenerBooking()
+
         binding.btnConnect.setOnClickListener { connectDriver() }
         binding.btnDisconnect.setOnClickListener { disconnectDriver() }
+
     }
 
     val locationPermission = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()){ permission ->
@@ -84,6 +92,23 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
                 }
                 else -> {
                     Log.d(TAG, "Permiso no concedido")
+                }
+            }
+        }
+    }
+
+    private fun listenerBooking(){
+        bookingListener = bookingProvider.getBooking().addSnapshotListener { snapshot, error ->
+            if (error != null){
+                Log.d("FIRESTORE", "Error: ${error.message}")
+                //Deje de escuchar cuando haya encontrado un error
+                return@addSnapshotListener
+            }
+
+            if (snapshot != null){
+                if (snapshot.documents.size > 0){
+                    val booking = snapshot.documents[0].toObject(Booking::class.java)
+                    Log.d("FIRESTORE", "DATA: ${booking?.toJson()}")
                 }
             }
         }
@@ -172,6 +197,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
     override fun onDestroy() {
         super.onDestroy()
         easyWayLocation?.endUpdates()
+        bookingListener?.remove()
     }
 
     override fun onMapReady(map: GoogleMap) {
