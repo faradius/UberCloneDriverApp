@@ -10,6 +10,7 @@ import android.location.Location
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.util.Log
 import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
@@ -47,6 +48,18 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
     private val authProvider = AuthProvider()
     private val bookingProvider = BookingProvider()
     private val modalBooking = ModalBottomSheetBooking()
+
+    private val timer = object: CountDownTimer(20000,1000){
+        override fun onTick(counter: Long) {
+            Log.d("TIMER", "Counter: $counter")
+        }
+
+        override fun onFinish() {
+            Log.d("TIMER", "ON FINISH")
+            modalBooking.dismiss()
+        }
+
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -101,6 +114,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
 
     private fun showModalBooking(){
         modalBooking.show(supportFragmentManager, ModalBottomSheetBooking.TAG)
+        timer.start()
     }
 
     private fun listenerBooking(){
