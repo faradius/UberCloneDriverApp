@@ -7,7 +7,6 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
-
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -18,6 +17,13 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.UberCloneDriverApp"
         tools:targetApi="31">
+        <activity
+            android:name=".activities.MapTripActivity"
+            android:exported="false">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
         <activity
             android:name=".activities.MapActivity"
             android:exported="false">
@@ -48,7 +54,7 @@
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyADypUb2125-DKKUMzIZ9cXQ5hXE0wmGi8"/>
+            android:value="AIzaSyADypUb2125-DKKUMzIZ9cXQ5hXE0wmGi8" />
     </application>
 
 </manifest>
