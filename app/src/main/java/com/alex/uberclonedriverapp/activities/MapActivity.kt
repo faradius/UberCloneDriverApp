@@ -42,7 +42,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
 
     private lateinit var binding: ActivityMapBinding
     private var googleMap:GoogleMap? = null
-    private var easyWayLocation:EasyWayLocation? = null
+    var easyWayLocation:EasyWayLocation? = null
     private var myLocationLatLng: LatLng? = null
     private var markerDriver: Marker? = null
     private val geoProvider = GeoProvider()
@@ -50,7 +50,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
     private val bookingProvider = BookingProvider()
     private val modalBooking = ModalBottomSheetBooking()
 
-    private val timer = object: CountDownTimer(20000,1000){
+    private val timer = object: CountDownTimer(30000,1000){
         override fun onTick(counter: Long) {
             Log.d("TIMER", "Counter: $counter")
         }
@@ -134,8 +134,11 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
             if (snapshot != null){
                 if (snapshot.documents.size > 0){
                     val booking = snapshot.documents[0].toObject(Booking::class.java)
-                    Log.d("FIRESTORE", "DATA: ${booking?.toJson()}")
-                    showModalBooking(booking!!)
+                    if(booking?.status == "create"){
+                        Log.d("FIRESTORE", "DATA: ${booking?.toJson()}")
+                        showModalBooking(booking!!)
+                    }
+
                 }
             }
         }
