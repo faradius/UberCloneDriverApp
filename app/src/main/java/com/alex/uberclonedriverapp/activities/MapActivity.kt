@@ -24,6 +24,7 @@ import com.alex.uberclonedriverapp.providers.AuthProvider
 import com.alex.uberclonedriverapp.providers.BookingProvider
 import com.alex.uberclonedriverapp.providers.GeoProvider
 import com.alex.uberclonedriverapp.utils.Config
+import com.alex.uberclonedriverapp.utils.Constants
 import com.example.easywaylocation.EasyWayLocation
 import com.example.easywaylocation.Listener
 import com.google.android.gms.location.LocationRequest
@@ -112,7 +113,12 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
         }
     }
 
-    private fun showModalBooking(){
+    private fun showModalBooking(booking: Booking){
+        //Se envian los datos en formato json al fragment
+        val bundle = Bundle()
+        bundle.putString(Constants.BOOKING, booking.toJson())
+        modalBooking.arguments = bundle
+
         modalBooking.show(supportFragmentManager, ModalBottomSheetBooking.TAG)
         timer.start()
     }
@@ -129,7 +135,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
                 if (snapshot.documents.size > 0){
                     val booking = snapshot.documents[0].toObject(Booking::class.java)
                     Log.d("FIRESTORE", "DATA: ${booking?.toJson()}")
-                    showModalBooking()
+                    showModalBooking(booking!!)
                 }
             }
         }
