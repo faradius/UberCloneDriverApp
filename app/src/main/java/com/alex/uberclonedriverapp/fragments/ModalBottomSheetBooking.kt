@@ -67,23 +67,14 @@ class ModalBottomSheetBooking: BottomSheetDialogFragment() {
 
     private fun cancelBooking(idClient: String){
         bookingProvider.updateStatus(idClient, "cancel").addOnCompleteListener {
-            if (it.isSuccessful){
-                dismiss()
-                if (context != null){
-                    Toast.makeText(context, "Viaje cancelado", Toast.LENGTH_LONG).show()
-                }
-            }
-            else{
-                if (context != null){
-                    Toast.makeText(context, "No se pudo cancelar el viaje", Toast.LENGTH_LONG).show()
-                }
-
-            }
+            (activity as? MapActivity)?.timer?.cancel()
+            dismiss()
         }
     }
 
     private fun acceptBooking(idClient: String){
         bookingProvider.updateStatus(idClient, "accept").addOnCompleteListener {
+            (activity as? MapActivity)?.timer?.cancel()
             if (it.isSuccessful){
                 //Tenemos que finalizar el reconocimiento de la ubicación en tiempo real por lo que es necesario hacer uso
                 //del metodo endUpdates ya que si no se usa solamente se borra una vez y es necesario parar ese servicio
@@ -95,15 +86,14 @@ class ModalBottomSheetBooking: BottomSheetDialogFragment() {
                 //Toast.makeText(context, "Viaje aceptado", Toast.LENGTH_LONG).show()
             }
             else{
-                if (context != null){
-                    Toast.makeText(context, "No se pudo aceptar el viaje", Toast.LENGTH_LONG).show()
-                }
+                //Toast.makeText(activity, "No se pudo aceptar el viaje", Toast.LENGTH_LONG).show()
             }
         }
     }
 
     private fun goToMapTrip(){
         val i = Intent(context, MapTripActivity::class.java)
+        i.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         context?.startActivity(i)
     }
 
@@ -113,8 +103,9 @@ class ModalBottomSheetBooking: BottomSheetDialogFragment() {
 
     override fun onDismiss(dialog: DialogInterface) {
         super.onDismiss(dialog)
-        if (booking.idClient != null){
-            cancelBooking(booking.idClient!!)
-        }
+        (activity as? MapActivity)?.timer?.cancel()
+//        if (booking.idClient != null){
+//            cancelBooking(booking.idClient!!)
+//        }
     }
 }

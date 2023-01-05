@@ -10,10 +10,16 @@ import org.imperiumlabs.geofirestore.GeoFirestore
 
 class GeoProvider {
     val collection = FirebaseFirestore.getInstance().collection("Locations")
+    val collectionWorking = FirebaseFirestore.getInstance().collection("LocationsWorking")
     val geoFirestore = GeoFirestore(collection)
+    val geoFirestoreWorking = GeoFirestore(collectionWorking)
 
     fun saveLocation(idDriver:String, position:LatLng){
         geoFirestore.setLocation(idDriver, GeoPoint(position.latitude, position.longitude))
+    }
+
+    fun saveLocationWorking(idDriver:String, position:LatLng){
+        geoFirestoreWorking.setLocation(idDriver, GeoPoint(position.latitude, position.longitude))
     }
 
     fun removeLocation(idDriver:String){

@@ -6,11 +6,33 @@
     android:layout_height="match_parent"
     tools:context=".activities.MapTripActivity">
 
-    <TextView
+    <fragment
+        android:id="@+id/map"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:name="com.google.android.gms.maps.SupportMapFragment"/>
+
+    <Button
+        android:id="@+id/btnStartTrip"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="MAP TRIP ACTIVITY"
-        android:layout_gravity="center"
-        android:textAlignment="center"/>
+        android:text="INICIAR VIAJE"
+        android:background="@drawable/rounded_button"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="50dp"
+        android:layout_marginHorizontal="60dp"
+        />
+
+    <Button
+        android:id="@+id/btnFinishTrip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="FINALIZAR VIAJE"
+        android:background="@drawable/rounded_button"
+        app:backgroundTint="@color/gray"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="50dp"
+        android:layout_marginHorizontal="60dp"
+        android:visibility="gone"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
