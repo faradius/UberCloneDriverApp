@@ -5,6 +5,7 @@ import android.os.Bundle
 import com.alex.uberclonedriverapp.R
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.graphics.Bitmap
@@ -15,6 +16,7 @@ import android.os.Build
 import android.os.CountDownTimer
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -41,6 +43,10 @@ import com.google.android.gms.maps.model.*
 import com.google.firebase.firestore.ListenerRegistration
 
 class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, DirectionUtil.DirectionCallBack{
+    private var markerDestination: Marker? = null
+    private var originLatLng: LatLng? = null
+    private var destinationLatLng: LatLng? = null
+    private var booking: Booking? = null
     private var markerOrigin: Marker? = null
     private var bookingListener: ListenerRegistration? = null
     private val TAG = "LOCALIZACIÓN"
@@ -60,6 +66,7 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
     private lateinit var directionUtil: DirectionUtil
 
     private var isLocationEnabled = false
+    private var isCloseToOrigin = false
 
     private val timer = object: CountDownTimer(30000,1000){
         override fun onTick(counter: Long) {
@@ -97,6 +104,8 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
             Manifest.permission.ACCESS_COARSE_LOCATION
         ))
 
+        binding.btnStartTrip.setOnClickListener { updateToStarted() }
+        binding.btnFinishTrip.setOnClickListener { updateToFinish() }
 //        binding.btnStartTrip.setOnClickListener { connectDriver() }
 //        binding.btnFinishTrip.setOnClickListener { disconnectDriver() }
 
@@ -122,16 +131,34 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
         }
     }
 
+    //Calcular la distancia entre dos puntos
+    private fun getDistanceBetween(originLatLng: LatLng, destinationLatLng: LatLng): Float{
+        var distance = 0.0f
+        val originLocation = Location("")
+        val destinationLocation = Location("")
+
+        originLocation.latitude = originLatLng.latitude
+        originLocation.longitude = originLatLng.longitude
+
+        destinationLocation.latitude = destinationLatLng.latitude
+        destinationLocation.longitude = destinationLatLng.longitude
+
+        //Con esto calculamos la distancia entre dos puntos
+        distance = originLocation.distanceTo(destinationLocation)
+        return distance
+    }
+
     private fun getBooking(){
         //el metodo get nos trae la información una sola vez, mientras el addSnapshotListener nos va a traer la información en tiempo real
         bookingProvider.getBooking().get().addOnSuccessListener { query->
             if (query != null){
                 if (query.size() > 0){
-                    val booking = query.documents[0].toObject(Booking::class.java)
+                    booking = query.documents[0].toObject(Booking::class.java)
                     Log.d("FIRESTORE", "BOOKING: ${booking?.toJson()}")
-                    val originLatLng = LatLng(booking?.originLat!!, booking.originLng!!)
-                    easyDrawRoute(originLatLng)
-                    addOriginMarker(originLatLng)
+                    originLatLng = LatLng(booking?.originLat!!, booking?.originLng!!)
+                    destinationLatLng = LatLng(booking?.destinationLat!!, booking?.destinationLng!!)
+                    easyDrawRoute(originLatLng!!)
+                    addOriginMarker(originLatLng!!)
 
                 }
             }
@@ -159,6 +186,13 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
     private fun addOriginMarker(position: LatLng){
         markerOrigin = googleMap?.addMarker(MarkerOptions().position(position!!).title("Recoger aqui")
             .icon(BitmapDescriptorFactory.fromResource(R.drawable.icons_location_person)))
+    }
+
+    private fun addDestinationMarker(){
+        if(destinationLatLng != null){
+            markerDestination = googleMap?.addMarker(MarkerOptions().position(destinationLatLng!!).title("Recoger aqui")
+                .icon(BitmapDescriptorFactory.fromResource(R.drawable.icons_pin)))
+        }
     }
 
     private fun showModalBooking(booking: Booking){
@@ -258,6 +292,38 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
         }
     }
 
+    private fun updateToStarted(){
+        if(isCloseToOrigin){
+            bookingProvider.updateStatus(booking?.idClient!!, "started").addOnCompleteListener {
+                if (it.isSuccessful){
+                    if (destinationLatLng != null){
+                        //Eliminar toodo del mapa
+                        googleMap?.clear()
+                        //Despues llamar al addmarker
+                        addMarker()
+                        easyDrawRoute(destinationLatLng!!)
+                        markerOrigin?.remove()
+                        addDestinationMarker()
+                    }
+                    showButtonFinish()
+                }
+            }
+
+        }else{
+            Toast.makeText(this, "Debes estar mas cerca a la posición de recogida", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun updateToFinish(){
+        bookingProvider.updateStatus(booking?.idClient!!, "finished").addOnCompleteListener {
+            if (it.isSuccessful){
+                val i = Intent(this,MapActivity::class.java)
+                i.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(i)
+            }
+        }
+    }
+
     override fun locationOn() {
 
     }
@@ -273,6 +339,15 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
 
         addMarker()
         saveLocation()
+
+        if (booking != null && originLatLng != null){
+            var distance = getDistanceBetween(myLocationLatLng!!, originLatLng!!)
+            if (distance <= 100){
+                isCloseToOrigin = true
+            }
+            Log.d("LOCATION", "DISTANCE: ${distance}") //la distancia esta dada en metros
+        }
+
         //Si sigue siendo false
         if (!isLocationEnabled){
             //la pasamos a true
