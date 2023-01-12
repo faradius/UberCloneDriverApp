@@ -1,7 +1,6 @@
 package com.alex.uberclonedriverapp.activities
 
 import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
 import com.alex.uberclonedriverapp.R
 
 import android.Manifest
@@ -12,8 +11,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.Drawable
 import android.location.Location
-import android.os.Build
-import android.os.CountDownTimer
+import android.os.*
 import android.util.Log
 import android.view.View
 import android.widget.Toast
@@ -67,6 +65,38 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
 
     private var isLocationEnabled = false
     private var isCloseToOrigin = false
+
+    //Distancia
+    private var meters = 0.0
+    private var km = 0.0
+    private var currentLocation = Location("")
+    private var previusLocation = Location("")
+    private var isStartedTrip = false
+
+    //Temporizador
+    private var counter = 0
+    private var min = 0
+    private var handler = Handler(Looper.myLooper()!!)
+    private var runnable = Runnable {
+        kotlin.run {
+            counter++
+
+            //Funcionando el Timer
+            if (min == 0){
+                binding.tvTimer.text = "$counter Seg"
+            }else{
+                binding.tvTimer.text = "$min Min $counter Seg"
+            }
+
+            if (counter == 60){
+                min = min + (counter / 60)
+                counter = 0
+                binding.tvTimer.text = "$min Min $counter Seg"
+            }
+
+            startTimer()
+        }
+    }
 
     private val timer = object: CountDownTimer(30000,1000){
         override fun onTick(counter: Long) {
@@ -129,6 +159,10 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
                 }
             }
         }
+    }
+
+    private fun startTimer(){
+        handler.postDelayed(runnable, 1000)
     }
 
     //Calcular la distancia entre dos puntos
@@ -258,6 +292,7 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
     override fun onDestroy() {
         super.onDestroy()
         easyWayLocation?.endUpdates()
+        handler.removeCallbacks(runnable)
     }
 
     override fun onMapReady(map: GoogleMap) {
@@ -298,6 +333,7 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
             bookingProvider.updateStatus(booking?.idClient!!, "started").addOnCompleteListener {
                 if (it.isSuccessful){
                     if (destinationLatLng != null){
+                        isStartedTrip = true
                         //Eliminar toodo del mapa
                         googleMap?.clear()
                         //Despues llamar al addmarker
@@ -305,6 +341,8 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
                         easyDrawRoute(destinationLatLng!!)
                         markerOrigin?.remove()
                         addDestinationMarker()
+                        //INICIALIZAR EL CONTADOR
+                        startTimer()
                     }
                     showButtonFinish()
                 }
@@ -318,6 +356,8 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
     private fun updateToFinish(){
         bookingProvider.updateStatus(booking?.idClient!!, "finished").addOnCompleteListener {
             if (it.isSuccessful){
+                handler.removeCallbacks(runnable) //Detener contador
+                isStartedTrip = false
                 val i = Intent(this,MapActivity::class.java)
                 i.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 startActivity(i)
@@ -333,6 +373,15 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
     override fun currentLocation(location: Location) {
         //Obteniendo la latitud y longitud de la posición actual
         myLocationLatLng = LatLng(location.latitude, location.longitude)
+        currentLocation = location
+
+        if(isStartedTrip){
+            meters = meters + previusLocation.distanceTo(currentLocation)
+            km = meters / 1000
+            binding.tvDistance.text = "${String.format("%.1f", km)} km"
+        }
+
+        previusLocation = location
 
         googleMap?.moveCamera(CameraUpdateFactory.newCameraPosition(
             CameraPosition.builder().target(myLocationLatLng!!).zoom(17f).build()
