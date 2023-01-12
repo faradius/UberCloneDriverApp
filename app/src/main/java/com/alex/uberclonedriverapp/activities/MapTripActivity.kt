@@ -166,6 +166,7 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
     }
 
     private fun easyDrawRoute(position: LatLng){
+        wayPoints.clear()
         wayPoints.add(myLocationLatLng!!)
         wayPoints.add(position)
         directionUtil = DirectionUtil.Builder()
