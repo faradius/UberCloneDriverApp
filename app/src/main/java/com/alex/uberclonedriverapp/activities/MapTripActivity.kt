@@ -22,11 +22,9 @@ import com.alex.uberclonedriverapp.databinding.ActivityMapBinding
 import com.alex.uberclonedriverapp.databinding.ActivityMapTripBinding
 import com.alex.uberclonedriverapp.fragments.ModalBottomSheetBooking
 import com.alex.uberclonedriverapp.models.Booking
+import com.alex.uberclonedriverapp.models.History
 import com.alex.uberclonedriverapp.models.Prices
-import com.alex.uberclonedriverapp.providers.AuthProvider
-import com.alex.uberclonedriverapp.providers.BookingProvider
-import com.alex.uberclonedriverapp.providers.ConfigProvider
-import com.alex.uberclonedriverapp.providers.GeoProvider
+import com.alex.uberclonedriverapp.providers.*
 import com.alex.uberclonedriverapp.utils.Config
 import com.alex.uberclonedriverapp.utils.Constants
 import com.example.easywaylocation.EasyWayLocation
@@ -61,6 +59,7 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
     private val geoProvider = GeoProvider()
     private val authProvider = AuthProvider()
     private val bookingProvider = BookingProvider()
+    private val historyProvider = HistoryProvider()
     private val modalBooking = ModalBottomSheetBooking()
 
     private var wayPoints: ArrayList<LatLng> = ArrayList()
@@ -370,6 +369,28 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
         }
     }
 
+    private fun createHistory(){
+        val history = History(
+            idDriver = authProvider.getId(),
+            idClient = booking?.idClient,
+            origin = booking?.origin,
+            destination = booking?.destination,
+            originLat = booking?.originLat,
+            originLng = booking?.originLng,
+            destinationLat = booking?.destinationLat,
+            destinationLng = booking?.destinationLng,
+            time = min,
+            km = km,
+            price = totalPrice
+
+        )
+        historyProvider.create(history).addOnCompleteListener {
+            if (it.isSuccessful){
+                goToCalificationClient()
+            }
+        }
+    }
+
     private fun getPrices(distance: Double, time: Double){
         configProvider.getPrices().addOnSuccessListener { document ->
             if (document.exists()){
@@ -385,7 +406,7 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
                 Log.d("PRICES", "total: $totalPrice")
 
                 totalPrice = if(totalPrice < 10.0) prices.minValue!! else totalPrice
-                goToCalificationClient()
+                createHistory()
 
             }
         }
