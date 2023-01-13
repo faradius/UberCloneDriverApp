@@ -22,7 +22,8 @@ data class History (
     val originLng: Double? = null,
     val destinationLat: Double? = null,
     val destinationLng: Double? = null,
-    val price: Double? = null
+    val price: Double? = null,
+    val timestamp: Long? = null
 ) {
     public fun toJson() = klaxon.toJsonString(this)
 

@@ -39,6 +39,7 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.firebase.firestore.ListenerRegistration
+import java.util.Date
 
 class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, DirectionUtil.DirectionCallBack{
     private var totalPrice = 0.0
@@ -357,16 +358,17 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
     }
 
     private fun updateToFinish(){
-        bookingProvider.updateStatus(booking?.idClient!!, "finished").addOnCompleteListener {
-            if (it.isSuccessful){
-                handler.removeCallbacks(runnable) //Detener contador
-                isStartedTrip = false
-                easyWayLocation?.endUpdates()
-                geoProvider.removeLocationWorking(authProvider.getId())
-                getPrices(km, min.toDouble())
 
-            }
+        handler.removeCallbacks(runnable) //Detener contador
+        isStartedTrip = false
+        easyWayLocation?.endUpdates()
+        geoProvider.removeLocationWorking(authProvider.getId())
+
+        if(min == 0){
+            min = 1
         }
+        getPrices(km, min.toDouble())
+
     }
 
     private fun createHistory(){
@@ -381,12 +383,17 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
             destinationLng = booking?.destinationLng,
             time = min,
             km = km,
-            price = totalPrice
+            price = totalPrice,
+            timestamp = Date().time
 
         )
         historyProvider.create(history).addOnCompleteListener {
             if (it.isSuccessful){
-                goToCalificationClient()
+                bookingProvider.updateStatus(booking?.idClient!!, "finished").addOnCompleteListener {
+                    if (it.isSuccessful){
+                        goToCalificationClient()
+                    }
+                }
             }
         }
     }
