@@ -22,8 +22,10 @@ import com.alex.uberclonedriverapp.databinding.ActivityMapBinding
 import com.alex.uberclonedriverapp.databinding.ActivityMapTripBinding
 import com.alex.uberclonedriverapp.fragments.ModalBottomSheetBooking
 import com.alex.uberclonedriverapp.models.Booking
+import com.alex.uberclonedriverapp.models.Prices
 import com.alex.uberclonedriverapp.providers.AuthProvider
 import com.alex.uberclonedriverapp.providers.BookingProvider
+import com.alex.uberclonedriverapp.providers.ConfigProvider
 import com.alex.uberclonedriverapp.providers.GeoProvider
 import com.alex.uberclonedriverapp.utils.Config
 import com.alex.uberclonedriverapp.utils.Constants
@@ -41,6 +43,8 @@ import com.google.android.gms.maps.model.*
 import com.google.firebase.firestore.ListenerRegistration
 
 class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, DirectionUtil.DirectionCallBack{
+    private var totalPrice = 0.0
+    private val configProvider = ConfigProvider()
     private var markerDestination: Marker? = null
     private var originLatLng: LatLng? = null
     private var destinationLatLng: LatLng? = null
@@ -358,11 +362,40 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
             if (it.isSuccessful){
                 handler.removeCallbacks(runnable) //Detener contador
                 isStartedTrip = false
-                val i = Intent(this,MapActivity::class.java)
-                i.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                startActivity(i)
+                easyWayLocation?.endUpdates()
+                geoProvider.removeLocationWorking(authProvider.getId())
+                getPrices(km, min.toDouble())
+
             }
         }
+    }
+
+    private fun getPrices(distance: Double, time: Double){
+        configProvider.getPrices().addOnSuccessListener { document ->
+            if (document.exists()){
+                val prices = document.toObject(Prices::class.java) //Obtenemos la información del documento
+
+                val totalDistance = distance * prices?.km!!  //Valor por kilometro
+                Log.d("PRICES", "totalDistance: $totalDistance")
+
+                val totalTime = time * prices.min!!  //Valor por minuto
+                Log.d("PRICES", "TotalTime: $totalTime")
+
+                totalPrice = totalDistance + totalTime
+                Log.d("PRICES", "total: $totalPrice")
+
+                totalPrice = if(totalPrice < 10.0) prices.minValue!! else totalPrice
+                goToCalificationClient()
+
+            }
+        }
+    }
+
+    private fun goToCalificationClient(){
+        val i = Intent(this,CalificationClientActivity::class.java)
+        i.putExtra(Constants.PRICE, totalPrice)
+        i.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(i)
     }
 
     override fun locationOn() {

@@ -26,6 +26,10 @@ class GeoProvider {
         collection.document(idDriver).delete()
     }
 
+    fun removeLocationWorking(idDriver:String){
+        collectionWorking.document(idDriver).delete()
+    }
+
     fun getLocation(idDriver: String): Task<DocumentSnapshot>{
         return collection.document(idDriver).get().addOnFailureListener{exception ->
             Log.d("Firebase", "getLocation: Error ${exception.toString()}")
