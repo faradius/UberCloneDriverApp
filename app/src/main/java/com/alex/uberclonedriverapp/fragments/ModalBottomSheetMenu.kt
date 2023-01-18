@@ -15,6 +15,7 @@ import com.alex.uberclonedriverapp.R
 import com.alex.uberclonedriverapp.activities.MainActivity
 import com.alex.uberclonedriverapp.activities.MapActivity
 import com.alex.uberclonedriverapp.activities.MapTripActivity
+import com.alex.uberclonedriverapp.activities.ProfileActivity
 import com.alex.uberclonedriverapp.models.Booking
 import com.alex.uberclonedriverapp.models.Driver
 import com.alex.uberclonedriverapp.providers.AuthProvider
@@ -31,6 +32,7 @@ class ModalBottomSheetMenu: BottomSheetDialogFragment() {
 
     var tvUserName: TextView? = null
     var lyLogout: LinearLayout? = null
+    var lyProfile: LinearLayout? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -40,10 +42,17 @@ class ModalBottomSheetMenu: BottomSheetDialogFragment() {
         val view = inflater.inflate(R.layout.modal_bottom_sheet_menu, container, false)
         tvUserName = view.findViewById(R.id.tvUserName)
         lyLogout = view.findViewById(R.id.lyLogout)
+        lyProfile = view.findViewById(R.id.lyProfile)
 
         getDriver()
         lyLogout?.setOnClickListener { goToMain() }
+        lyProfile?.setOnClickListener { goToProfile() }
         return view
+    }
+
+    private fun goToProfile(){
+        val i = Intent(activity, ProfileActivity::class.java)
+        startActivity(i)
     }
 
     private fun goToMain(){

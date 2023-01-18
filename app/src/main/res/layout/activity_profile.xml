@@ -26,6 +26,7 @@
             android:layout_marginTop="30dp"/>
 
         <ImageView
+            android:id="@+id/ivBack"
             android:layout_width="35dp"
             android:layout_height="35dp"
             android:src="@drawable/ic_back"
@@ -42,6 +43,7 @@
             android:layout_marginBottom="45dp"/>
 
         <TextView
+            android:id="@+id/tvEmail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Correo Electronico"
@@ -58,7 +60,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:layout_marginTop="250dp">
+        android:layout_marginTop="250dp"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
@@ -66,6 +69,8 @@
             android:layout_marginHorizontal="30dp"
             app:startIconDrawable="@drawable/ic_little_person_white"
             app:startIconTint="@color/gray_dark"
+            android:layout_marginTop="15dp"
+            app:hintTextColor="@color/gray_dark"
             style="@style/EditTextGray">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -86,12 +91,15 @@
             android:layout_marginHorizontal="30dp"
             app:startIconDrawable="@drawable/ic_little_person_outline"
             style="@style/EditTextGray"
-            app:startIconTint="@color/gray_dark">
+            app:startIconTint="@color/gray_dark"
+            app:hintTextColor="@color/gray_dark"
+            android:layout_marginTop="5dp">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etLastName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColorHint="@color/gray_dark"
                 android:hint="Apellido"
                 android:inputType="text"
                 android:textSize="13sp"
@@ -105,12 +113,15 @@
             android:layout_marginHorizontal="30dp"
             app:startIconDrawable="@drawable/ic_phone_white"
             style="@style/EditTextGray"
-            app:startIconTint="@color/gray_dark">
+            app:startIconTint="@color/gray_dark"
+            android:layout_marginTop="5dp"
+            app:hintTextColor="@color/gray_dark">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etPhone"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColorHint="@color/gray_dark"
                 android:hint="Telefono"
                 android:inputType="phone"
                 android:textSize="13sp"
@@ -124,12 +135,15 @@
             android:layout_marginHorizontal="30dp"
             app:startIconDrawable="@drawable/ic_car"
             style="@style/EditTextGray"
-            app:startIconTint="@color/gray_dark">
+            app:startIconTint="@color/gray_dark"
+            android:layout_marginTop="5dp"
+            app:hintTextColor="@color/gray_dark">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etCarBrand"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColorHint="@color/gray_dark"
                 android:hint="Marca del vehiculo"
                 android:inputType="text"
                 android:textSize="13sp"
@@ -143,12 +157,15 @@
             android:layout_marginHorizontal="30dp"
             app:startIconDrawable="@drawable/ic_color"
             style="@style/EditTextGray"
-            app:startIconTint="@color/gray_dark">
+            app:startIconTint="@color/gray_dark"
+            android:layout_marginTop="5dp"
+            app:hintTextColor="@color/gray_dark">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etCarColor"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColorHint="@color/gray_dark"
                 android:hint="Color del vehiculo"
                 android:inputType="text"
                 android:textSize="13sp"
@@ -162,12 +179,15 @@
             android:layout_marginHorizontal="30dp"
             app:startIconDrawable="@drawable/ic_number"
             style="@style/EditTextGray"
-            app:startIconTint="@color/gray_dark">
+            app:startIconTint="@color/gray_dark"
+            android:layout_marginTop="5dp"
+            app:hintTextColor="@color/gray_dark">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etCarPlate"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColorHint="@color/gray_dark"
                 android:hint="Placa del vehiculo"
                 android:inputType="text"
                 android:textSize="13sp"
