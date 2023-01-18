@@ -19,6 +19,7 @@ import androidx.core.content.ContextCompat
 import com.alex.uberclonedriverapp.R
 import com.alex.uberclonedriverapp.databinding.ActivityMapBinding
 import com.alex.uberclonedriverapp.fragments.ModalBottomSheetBooking
+import com.alex.uberclonedriverapp.fragments.ModalBottomSheetMenu
 import com.alex.uberclonedriverapp.models.Booking
 import com.alex.uberclonedriverapp.providers.AuthProvider
 import com.alex.uberclonedriverapp.providers.BookingProvider
@@ -49,6 +50,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
     private val authProvider = AuthProvider()
     private val bookingProvider = BookingProvider()
     private val modalBooking = ModalBottomSheetBooking()
+    private val modalMenu = ModalBottomSheetMenu()
 
     val timer = object: CountDownTimer(30000,1000){
         override fun onTick(counter: Long) {
@@ -90,6 +92,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
 
         binding.btnConnect.setOnClickListener { connectDriver() }
         binding.btnDisconnect.setOnClickListener { disconnectDriver() }
+        binding.ivMenu.setOnClickListener { showModalMenu() }
 
     }
 
@@ -113,6 +116,9 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
         }
     }
 
+    private fun showModalMenu(){
+        modalMenu.show(supportFragmentManager, ModalBottomSheetMenu.TAG)
+    }
     private fun showModalBooking(booking: Booking){
         //Se envian los datos en formato json al fragment
         val bundle = Bundle()
