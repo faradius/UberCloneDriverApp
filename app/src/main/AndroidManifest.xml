@@ -18,6 +18,9 @@
         android:theme="@style/Theme.UberCloneDriverApp"
         tools:targetApi="31">
         <activity
+            android:name=".activities.ProfileActivity"
+            android:exported="false" />
+        <activity
             android:name=".activities.CalificationClientActivity"
             android:exported="false">
             <meta-data
