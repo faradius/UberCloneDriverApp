@@ -44,23 +44,20 @@ class DriverProvider {
     fun update(driver:Driver): Task<Void> {
         val map: MutableMap<String, Any> = HashMap()
 
-        if (driver?.image != null){
-            map["name"] = driver?.name!!
-            map["lastname"] = driver?.lastname!!
-            map["phone"] = driver?.phone!!
-            map["brandCar"] = driver?.brandCar!!
-            map["colorCar"] = driver?.colorCar!!
-            map["plateNumber"] = driver?.plateNumber!!
+        // Establecer valores en el mapa
+        map["name"] = driver?.name!!
+        map["lastname"] = driver?.lastname!!
+        map["phone"] = driver?.phone!!
+        map["brandCar"] = driver?.brandCar!!
+        map["colorCar"] = driver?.colorCar!!
+        map["plateNumber"] = driver?.plateNumber!!
+
+        // Si el conductor tiene una imagen, agregarla al mapa
+        if (driver?.image != null) {
             map["image"] = driver?.image!!
-            return db.document(driver?.id!!).update(map)
-        }else{
-            map["name"] = driver?.name!!
-            map["lastname"] = driver?.lastname!!
-            map["phone"] = driver?.phone!!
-            map["brandCar"] = driver?.brandCar!!
-            map["colorCar"] = driver?.colorCar!!
-            map["plateNumber"] = driver?.plateNumber!!
-            return db.document(driver?.id!!).update(map)
         }
+
+        // Actualizar el documento en la base de datos
+        return db.document(driver?.id!!).update(map)
     }
 }
