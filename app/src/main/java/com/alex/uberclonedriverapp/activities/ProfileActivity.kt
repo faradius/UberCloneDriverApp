@@ -1,20 +1,27 @@
 package com.alex.uberclonedriverapp.activities
 
+import android.app.Activity
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import com.alex.uberclonedriverapp.R
 import com.alex.uberclonedriverapp.databinding.ActivityProfileBinding
 import com.alex.uberclonedriverapp.models.Driver
 import com.alex.uberclonedriverapp.providers.AuthProvider
 import com.alex.uberclonedriverapp.providers.DriverProvider
 import com.alex.uberclonedriverapp.utils.Config
+import com.github.dhaval2404.imagepicker.ImagePicker
+import java.io.File
 
 class ProfileActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityProfileBinding
     val driverProvider = DriverProvider()
     val authProvider = AuthProvider()
+
+    private var imageFile: File? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,6 +32,7 @@ class ProfileActivity : AppCompatActivity() {
         getDriver()
         binding.ivBack.setOnClickListener { finish() }
         binding.btnUpdate.setOnClickListener { updateInfo() }
+        binding.cvProfileImage.setOnClickListener { selectImage() }
     }
 
     private fun updateInfo(){
@@ -67,5 +75,30 @@ class ProfileActivity : AppCompatActivity() {
                 binding.etCarPlate.setText(driver?.plateNumber)
             }
         }
+    }
+
+    private val startImageForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){result: ActivityResult ->
+        val resultCode = result.resultCode
+        val data = result.data
+
+        if (resultCode == Activity.RESULT_OK){
+            val fileUri = data?.data
+            imageFile = File(fileUri?.path)
+            binding.cvProfileImage.setImageURI(fileUri)
+        }
+        else if (resultCode == ImagePicker.RESULT_ERROR){
+            Toast.makeText(this, ImagePicker.getError(data), Toast.LENGTH_LONG).show()
+        }else{
+            Toast.makeText(this, "Tarea cancelada", Toast.LENGTH_LONG).show()
+        }
+    }
+    private fun selectImage(){
+        ImagePicker.with(this)
+            .crop()
+            .compress(1024)
+            .maxResultSize(1080,1080)
+            .createIntent { intent ->
+                startImageForResult.launch(intent)
+            }
     }
 }
