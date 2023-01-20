@@ -3,6 +3,7 @@ package com.alex.uberclonedriverapp.activities
 import android.app.Activity
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -12,6 +13,7 @@ import com.alex.uberclonedriverapp.models.Driver
 import com.alex.uberclonedriverapp.providers.AuthProvider
 import com.alex.uberclonedriverapp.providers.DriverProvider
 import com.alex.uberclonedriverapp.utils.Config
+import com.bumptech.glide.Glide
 import com.github.dhaval2404.imagepicker.ImagePicker
 import java.io.File
 
@@ -53,13 +55,32 @@ class ProfileActivity : AppCompatActivity() {
             plateNumber = carPlate
         )
 
-        driverProvider.update(driver).addOnCompleteListener {
-            if (it.isSuccessful){
-                Toast.makeText(this@ProfileActivity, "Datos actualizados correctamente", Toast.LENGTH_LONG).show()
-            }else{
-                Toast.makeText(this@ProfileActivity, "No se pudo actualizar la información", Toast.LENGTH_LONG).show()
+        if (imageFile != null){
+            driverProvider.uploadImage(authProvider.getId(), imageFile!!).addOnSuccessListener { taskSnapshot->
+                driverProvider.getImageUrl().addOnSuccessListener { url ->
+                    val imageUrl = url.toString()
+                    driver.image = imageUrl
+                    driverProvider.update(driver).addOnCompleteListener {
+                        if (it.isSuccessful){
+                            Toast.makeText(this@ProfileActivity, "Datos actualizados correctamente", Toast.LENGTH_LONG).show()
+                        }else{
+                            Toast.makeText(this@ProfileActivity, "No se pudo actualizar la información", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                    Log.d("STORAGE", "$imageUrl")
+                }
+            }
+        }else{
+            driverProvider.update(driver).addOnCompleteListener {
+                if (it.isSuccessful){
+                    Toast.makeText(this@ProfileActivity, "Datos actualizados correctamente", Toast.LENGTH_LONG).show()
+                }else{
+                    Toast.makeText(this@ProfileActivity, "No se pudo actualizar la información", Toast.LENGTH_LONG).show()
+                }
             }
         }
+
+
     }
 
     private fun getDriver(){
@@ -73,6 +94,12 @@ class ProfileActivity : AppCompatActivity() {
                 binding.etCarBrand.setText(driver?.brandCar)
                 binding.etCarColor.setText(driver?.colorCar)
                 binding.etCarPlate.setText(driver?.plateNumber)
+
+                if(driver?.image != null){
+                    if (driver?.image != ""){
+                        Glide.with(this).load(driver?.image).into(binding.cvProfileImage)
+                    }
+                }
             }
         }
     }
