@@ -1,12 +1,14 @@
 package com.alex.uberclonedriverapp.adapters
 
 import android.app.Activity
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.alex.uberclonedriverapp.R
+import com.alex.uberclonedriverapp.activities.HistoryDetailActivity
 import com.alex.uberclonedriverapp.models.History
 import com.alex.uberclonedriverapp.utils.RelativeTime
 
@@ -29,6 +31,15 @@ class HistoriesAdapter (val context: Activity, val histories:ArrayList<History>)
             holder.tvDate.text = RelativeTime.getTimeAgo(history.timestamp!!, context)
         }
 
+        //Se obtiene el id pero no de firebase si no de la lista que fue convertida a objeto y en esa
+        //función se le agrego la obtención de cada id que tiene los documentos
+        holder.itemView.setOnClickListener { goToDetail(history?.id!!) }
+    }
+
+    private fun goToDetail(idHistory: String){
+        val i = Intent(context, HistoryDetailActivity::class.java)
+        i.putExtra("id", idHistory)
+        context.startActivity(i)
     }
 
     class HistoriesAdapterViewHolder(view: View): RecyclerView.ViewHolder(view){

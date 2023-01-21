@@ -5,6 +5,7 @@ import com.alex.uberclonedriverapp.models.Booking
 import com.alex.uberclonedriverapp.models.History
 import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -18,6 +19,10 @@ class HistoryProvider {
         return db.add(history).addOnFailureListener{
             Log.d("FIRESTORE", "ERROR: ${it.message}")
         }
+    }
+
+    fun getHistoryById(id:String): Task<DocumentSnapshot> {
+        return db.document(id).get()
     }
 
     fun getLastHistory(): Query{ //CONSULTA COMPUESTA - INDICE

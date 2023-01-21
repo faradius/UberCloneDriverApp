@@ -36,7 +36,9 @@ class HistoriesActivity : AppCompatActivity() {
                     val documents = query.documents
 
                     for (d in documents){
-                        val history = d.toObject(History::class.java)
+                        var history = d.toObject(History::class.java)
+                        //Se le agrega el id pero a la lista de historiales convertido a objeto
+                        history?.id = d.id
                         histories.add(history!!)
                     }
 
