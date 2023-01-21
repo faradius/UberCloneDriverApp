@@ -21,6 +21,7 @@ import androidx.core.content.ContextCompat
 import com.alex.uberclonedriverapp.databinding.ActivityMapBinding
 import com.alex.uberclonedriverapp.databinding.ActivityMapTripBinding
 import com.alex.uberclonedriverapp.fragments.ModalBottomSheetBooking
+import com.alex.uberclonedriverapp.fragments.ModalBottomSheetTripInfo
 import com.alex.uberclonedriverapp.models.Booking
 import com.alex.uberclonedriverapp.models.History
 import com.alex.uberclonedriverapp.models.Prices
@@ -76,6 +77,9 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
     private var currentLocation = Location("")
     private var previusLocation = Location("")
     private var isStartedTrip = false
+
+    //Modal
+    private var modalTrip = ModalBottomSheetTripInfo()
 
     //Temporizador
     private var counter = 0
@@ -140,6 +144,7 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
 
         binding.btnStartTrip.setOnClickListener { updateToStarted() }
         binding.btnFinishTrip.setOnClickListener { updateToFinish() }
+        binding.ivClientInfo.setOnClickListener { showModalInfo() }
 //        binding.btnStartTrip.setOnClickListener { connectDriver() }
 //        binding.btnFinishTrip.setOnClickListener { disconnectDriver() }
 
@@ -163,6 +168,10 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
                 }
             }
         }
+    }
+
+    private fun showModalInfo(){
+        modalTrip.show(supportFragmentManager, ModalBottomSheetTripInfo.TAG)
     }
 
     private fun startTimer(){
