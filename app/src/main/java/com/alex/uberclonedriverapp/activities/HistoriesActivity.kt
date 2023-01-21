@@ -1,5 +1,6 @@
 package com.alex.uberclonedriverapp.activities
 
+import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -23,6 +24,11 @@ class HistoriesActivity : AppCompatActivity() {
 
         val linearLayoutManager = LinearLayoutManager(this)
         binding.rvHistories.layoutManager = linearLayoutManager
+
+        setSupportActionBar(binding.toolbar)
+        supportActionBar?.title = "Historial de viajes"
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        binding.toolbar.setTitleTextColor(Color.WHITE)
 
         getHistories()
     }
