@@ -24,6 +24,10 @@ class HistoryProvider {
         return db.whereEqualTo("idDriver", authProvider.getId()).orderBy("timestamp", Query.Direction.DESCENDING).limit(1)
     }
 
+    fun getHistories(): Query{ //CONSULTA COMPUESTA - INDICE
+        return db.whereEqualTo("idDriver", authProvider.getId()).orderBy("timestamp", Query.Direction.DESCENDING)
+    }
+
     fun getBooking(): Query {
         return db.whereEqualTo("idDriver", authProvider.getId())
     }

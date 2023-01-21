@@ -12,10 +12,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import com.alex.uberclonedriverapp.R
-import com.alex.uberclonedriverapp.activities.MainActivity
-import com.alex.uberclonedriverapp.activities.MapActivity
-import com.alex.uberclonedriverapp.activities.MapTripActivity
-import com.alex.uberclonedriverapp.activities.ProfileActivity
+import com.alex.uberclonedriverapp.activities.*
 import com.alex.uberclonedriverapp.models.Booking
 import com.alex.uberclonedriverapp.models.Driver
 import com.alex.uberclonedriverapp.providers.AuthProvider
@@ -33,6 +30,7 @@ class ModalBottomSheetMenu: BottomSheetDialogFragment() {
     var tvUserName: TextView? = null
     var lyLogout: LinearLayout? = null
     var lyProfile: LinearLayout? = null
+    var lyHistory: LinearLayout? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -43,15 +41,22 @@ class ModalBottomSheetMenu: BottomSheetDialogFragment() {
         tvUserName = view.findViewById(R.id.tvUserName)
         lyLogout = view.findViewById(R.id.lyLogout)
         lyProfile = view.findViewById(R.id.lyProfile)
+        lyHistory = view.findViewById(R.id.lyHistory)
 
         getDriver()
         lyLogout?.setOnClickListener { goToMain() }
         lyProfile?.setOnClickListener { goToProfile() }
+        lyHistory?.setOnClickListener { goToHistories() }
         return view
     }
 
     private fun goToProfile(){
         val i = Intent(activity, ProfileActivity::class.java)
+        startActivity(i)
+    }
+
+    private fun goToHistories(){
+        val i = Intent(activity, HistoriesActivity::class.java)
         startActivity(i)
     }
 
