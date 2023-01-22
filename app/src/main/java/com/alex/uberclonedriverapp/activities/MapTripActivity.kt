@@ -62,7 +62,6 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
     private val authProvider = AuthProvider()
     private val bookingProvider = BookingProvider()
     private val historyProvider = HistoryProvider()
-    private val modalBooking = ModalBottomSheetBooking()
 
     private var wayPoints: ArrayList<LatLng> = ArrayList()
     private val WAY_POINT_TAG = "way_point_tag"
@@ -104,18 +103,6 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
 
             startTimer()
         }
-    }
-
-    private val timer = object: CountDownTimer(30000,1000){
-        override fun onTick(counter: Long) {
-            Log.d("TIMER", "Counter: $counter")
-        }
-
-        override fun onFinish() {
-            Log.d("TIMER", "ON FINISH")
-            modalBooking.dismiss()
-        }
-
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -171,7 +158,15 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
     }
 
     private fun showModalInfo(){
-        modalTrip.show(supportFragmentManager, ModalBottomSheetTripInfo.TAG)
+
+        if(booking != null){
+            val bundle = Bundle()
+            bundle.putString(Constants.BOOKING, booking?.toJson())
+            modalTrip.arguments = bundle
+            modalTrip.show(supportFragmentManager, ModalBottomSheetTripInfo.TAG)
+        }else{
+            Toast.makeText(this, "No se pudo cargar la información", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun startTimer(){
@@ -241,16 +236,6 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
             markerDestination = googleMap?.addMarker(MarkerOptions().position(destinationLatLng!!).title("Recoger aqui")
                 .icon(BitmapDescriptorFactory.fromResource(R.drawable.icons_pin)))
         }
-    }
-
-    private fun showModalBooking(booking: Booking){
-        //Se envian los datos en formato json al fragment
-        val bundle = Bundle()
-        bundle.putString(Constants.BOOKING, booking.toJson())
-        modalBooking.arguments = bundle
-
-        modalBooking.show(supportFragmentManager, ModalBottomSheetBooking.TAG)
-        timer.start()
     }
 
     private fun saveLocation(){
