@@ -64,6 +64,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener, SensorEven
     private var vectSensor: Sensor? = null
     private var declination = 0.0f
     private var isFistTimeOnResume = false
+    private var isFistLocation = false
 
     val timer = object: CountDownTimer(30000,1000){
         override fun onTick(counter: Long) {
@@ -229,25 +230,6 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener, SensorEven
         }
     }
 
-    private fun getMarkerFromDrawable(drawable: Drawable): BitmapDescriptor{
-        val canvas = Canvas()
-        val bitmap = Bitmap.createBitmap(
-            100,
-            100,
-            Bitmap.Config.ARGB_8888
-        )
-        canvas.setBitmap(bitmap)
-        drawable.setBounds(0,0,100,100)
-        drawable.draw(canvas)
-        return BitmapDescriptorFactory.fromBitmap(bitmap)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        easyWayLocation?.endUpdates()
-        bookingListener?.remove()
-    }
-
     override fun onMapReady(map: GoogleMap) {
         googleMap = map
         googleMap?.uiSettings?.isZoomControlsEnabled = true
@@ -299,9 +281,20 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener, SensorEven
 
         declination = field.declination
 
+//        if(!isFistLocation){
+//            isFistLocation = true
+//            googleMap?.moveCamera(CameraUpdateFactory.newCameraPosition(
+//                CameraPosition.builder().target(myLocationLatLng!!).zoom(19f).build()
+//            ))
+//        }
+
         googleMap?.moveCamera(CameraUpdateFactory.newCameraPosition(
             CameraPosition.builder().target(myLocationLatLng!!).zoom(19f).build()
         ))
+
+//        googleMap?.moveCamera(CameraUpdateFactory.newCameraPosition(
+//            CameraPosition.builder().target(myLocationLatLng!!).build()
+//        ))
 
         addDirectionMarker(myLocationLatLng!!, angle)
         saveLocation()
@@ -313,7 +306,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener, SensorEven
 
     private fun updateCamera(bearing: Float){
         val oldPos = googleMap?.cameraPosition
-        val pos = CameraPosition.builder(oldPos!!).bearing(bearing).tilt(50f).zoom(19f).build()
+        val pos = CameraPosition.builder(oldPos!!).bearing(bearing).tilt(50f).build()
         googleMap?.moveCamera(CameraUpdateFactory.newCameraPosition(pos))
         if (myLocationLatLng != null){
             addDirectionMarker(myLocationLatLng!!, angle)
@@ -335,6 +328,26 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener, SensorEven
                 .flat(true)
                 .icon(markerIcon)
         )
+    }
+
+    private fun getMarkerFromDrawable(drawable: Drawable): BitmapDescriptor{
+        val canvas = Canvas()
+        val bitmap = Bitmap.createBitmap(
+            100,
+            100,
+            Bitmap.Config.ARGB_8888
+        )
+        canvas.setBitmap(bitmap)
+        drawable.setBounds(0,0,100,100)
+        drawable.draw(canvas)
+        return BitmapDescriptorFactory.fromBitmap(bitmap)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        easyWayLocation?.endUpdates()
+        bookingListener?.remove()
+        stopSensor()
     }
 
     //Esto se ejecuta cada vez que se mueve el dispositivo

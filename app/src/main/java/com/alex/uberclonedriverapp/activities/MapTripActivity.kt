@@ -10,6 +10,10 @@ import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.Drawable
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.location.Location
 import android.os.*
 import android.util.Log
@@ -42,7 +46,7 @@ import com.google.android.gms.maps.model.*
 import com.google.firebase.firestore.ListenerRegistration
 import java.util.Date
 
-class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, DirectionUtil.DirectionCallBack{
+class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, DirectionUtil.DirectionCallBack, SensorEventListener{
     private var totalPrice = 0.0
     private val configProvider = ConfigProvider()
     private var markerDestination: Marker? = null
@@ -79,6 +83,15 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
 
     //Modal
     private var modalTrip = ModalBottomSheetTripInfo()
+
+    //sensor camera
+    private var angle = 0
+    private val rotationMatrix = FloatArray(16)
+    private var sensorManager: SensorManager? = null
+    private var vectSensor: Sensor? = null
+    private var declination = 0.0f
+    private var isFistTimeOnResume = false
+    private var isFistLocation = false
 
     //Temporizador
     private var counter = 0
@@ -121,6 +134,9 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
             smallestDisplacement = 1f
 
         }
+
+        sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager?
+        vectSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
 
         easyWayLocation = EasyWayLocation(this, locationRequest, false, false,this)
 
@@ -274,28 +290,17 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
         }
     }
 
-    private fun getMarkerFromDrawable(drawable: Drawable): BitmapDescriptor{
-        val canvas = Canvas()
-        val bitmap = Bitmap.createBitmap(
-            70,
-            150,
-            Bitmap.Config.ARGB_8888
-        )
-        canvas.setBitmap(bitmap)
-        drawable.setBounds(0,0,70,150)
-        drawable.draw(canvas)
-        return BitmapDescriptorFactory.fromBitmap(bitmap)
-    }
-
     override fun onDestroy() {
         super.onDestroy()
         easyWayLocation?.endUpdates()
         handler.removeCallbacks(runnable)
+        stopSensor()
     }
 
     override fun onMapReady(map: GoogleMap) {
         googleMap = map
         googleMap?.uiSettings?.isZoomControlsEnabled = true
+        startSensor()
 
 //        easyWayLocation?.startLocation()
 
@@ -438,11 +443,18 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
 
         previusLocation = location
 
+//        if(!isFistLocation){
+//            isFistLocation = true
+//            googleMap?.moveCamera(CameraUpdateFactory.newCameraPosition(
+//                CameraPosition.builder().target(myLocationLatLng!!).zoom(19f).build()
+//            ))
+//        }
+
         googleMap?.moveCamera(CameraUpdateFactory.newCameraPosition(
-            CameraPosition.builder().target(myLocationLatLng!!).zoom(17f).build()
+            CameraPosition.builder().target(myLocationLatLng!!).zoom(19f).build()
         ))
 
-        addMarker()
+        addDirectionMarker(myLocationLatLng!!, angle)
         saveLocation()
 
         if (booking != null && originLatLng != null){
@@ -471,5 +483,86 @@ class MapTripActivity : AppCompatActivity(), OnMapReadyCallback,Listener, Direct
         polyLineDetailsArray: ArrayList<PolyLineDataBean>
     ) {
         directionUtil.drawPath(WAY_POINT_TAG)
+    }
+
+    private fun updateCamera(bearing: Float){
+        val oldPos = googleMap?.cameraPosition
+        val pos = CameraPosition.builder(oldPos!!).bearing(bearing).tilt(50f).build()
+        googleMap?.moveCamera(CameraUpdateFactory.newCameraPosition(pos))
+        if (myLocationLatLng != null){
+            addDirectionMarker(myLocationLatLng!!, angle)
+        }
+
+    }
+
+    private fun addDirectionMarker(latLng: LatLng, angle: Int){
+        val circleDrawable = ContextCompat.getDrawable(applicationContext, R.drawable.ic_up_arrow_circle)
+        val markerIcon = getMarkerFromDrawable(circleDrawable!!)
+        if(markerDriver != null){
+            markerDriver?.remove()
+        }
+        markerDriver = googleMap?.addMarker(
+            MarkerOptions()
+                .position(latLng)
+                .anchor(0.5f, 0.5f)
+                .rotation(angle.toFloat())
+                .flat(true)
+                .icon(markerIcon)
+        )
+    }
+
+    private fun getMarkerFromDrawable(drawable: Drawable): BitmapDescriptor{
+        val canvas = Canvas()
+        val bitmap = Bitmap.createBitmap(
+            100,
+            100,
+            Bitmap.Config.ARGB_8888
+        )
+        canvas.setBitmap(bitmap)
+        drawable.setBounds(0,0,100,100)
+        drawable.draw(canvas)
+        return BitmapDescriptorFactory.fromBitmap(bitmap)
+    }
+
+    //Esto se ejecuta cada vez que se mueve el dispositivo
+    override fun onSensorChanged(event: SensorEvent) {
+        if (event.sensor.type == Sensor.TYPE_ROTATION_VECTOR){
+            SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
+            val orientation = FloatArray(3)
+            SensorManager.getOrientation(rotationMatrix, orientation)
+            if (Math.abs(Math.toDegrees(orientation[0].toDouble()) - angle) > 0.8){
+                val bearing = Math.toDegrees(orientation[0].toDouble()).toFloat() + declination
+                updateCamera(bearing)
+            }
+            angle = Math.toDegrees(orientation[0].toDouble()).toInt()
+        }
+    }
+
+    override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
+
+    }
+
+    private fun startSensor(){
+        if (sensorManager != null){
+            sensorManager?.registerListener(this, vectSensor, SensorManager.SENSOR_STATUS_ACCURACY_LOW)
+        }
+    }
+
+    private fun stopSensor(){
+        sensorManager?.unregisterListener(this)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (!isFistTimeOnResume){
+            isFistTimeOnResume = true
+        }else{
+            startSensor()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        stopSensor()
     }
 }
