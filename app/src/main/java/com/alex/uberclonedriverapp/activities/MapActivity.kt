@@ -6,6 +6,11 @@ import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.Drawable
+import android.hardware.GeomagneticField
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.location.Location
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
@@ -37,7 +42,7 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.firebase.firestore.ListenerRegistration
 
-class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
+class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener, SensorEventListener{
     private var bookingListener: ListenerRegistration? = null
     private val TAG = "LOCALIZACIÓN"
 
@@ -51,6 +56,14 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
     private val bookingProvider = BookingProvider()
     private val modalBooking = ModalBottomSheetBooking()
     private val modalMenu = ModalBottomSheetMenu()
+
+    //sensor camera
+    private var angle = 0
+    private val rotationMatrix = FloatArray(16)
+    private var sensorManager: SensorManager? = null
+    private var vectSensor: Sensor? = null
+    private var declination = 0.0f
+    private var isFistTimeOnResume = false
 
     val timer = object: CountDownTimer(30000,1000){
         override fun onTick(counter: Long) {
@@ -80,6 +93,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
             smallestDisplacement = 1f
 
         }
+        sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager?
+        vectSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
 
         easyWayLocation = EasyWayLocation(this, locationRequest, false, false,this)
 
@@ -217,18 +232,14 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
     private fun getMarkerFromDrawable(drawable: Drawable): BitmapDescriptor{
         val canvas = Canvas()
         val bitmap = Bitmap.createBitmap(
-            70,
-            150,
+            100,
+            100,
             Bitmap.Config.ARGB_8888
         )
         canvas.setBitmap(bitmap)
-        drawable.setBounds(0,0,70,150)
+        drawable.setBounds(0,0,100,100)
         drawable.draw(canvas)
         return BitmapDescriptorFactory.fromBitmap(bitmap)
-    }
-
-    override fun onResume() {
-        super.onResume()
     }
 
     override fun onDestroy() {
@@ -242,6 +253,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
         googleMap?.uiSettings?.isZoomControlsEnabled = true
 //        easyWayLocation?.startLocation()
 
+        startSensor()
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -278,11 +290,20 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
         //Obteniendo la latitud y longitud de la posición actual
         myLocationLatLng = LatLng(location.latitude, location.longitude)
 
+        val field = GeomagneticField(
+            location.latitude.toFloat(),
+            location.longitude.toFloat(),
+            location.altitude.toFloat(),
+            System.currentTimeMillis()
+        )
+
+        declination = field.declination
+
         googleMap?.moveCamera(CameraUpdateFactory.newCameraPosition(
-            CameraPosition.builder().target(myLocationLatLng!!).zoom(17f).build()
+            CameraPosition.builder().target(myLocationLatLng!!).zoom(19f).build()
         ))
 
-        addMarker()
+        addDirectionMarker(myLocationLatLng!!, angle)
         saveLocation()
     }
 
@@ -290,5 +311,71 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener {
 
     }
 
+    private fun updateCamera(bearing: Float){
+        val oldPos = googleMap?.cameraPosition
+        val pos = CameraPosition.builder(oldPos!!).bearing(bearing).tilt(50f).zoom(19f).build()
+        googleMap?.moveCamera(CameraUpdateFactory.newCameraPosition(pos))
+        if (myLocationLatLng != null){
+            addDirectionMarker(myLocationLatLng!!, angle)
+        }
 
+    }
+
+    private fun addDirectionMarker(latLng: LatLng, angle: Int){
+        val circleDrawable = ContextCompat.getDrawable(applicationContext, R.drawable.ic_up_arrow_circle)
+        val markerIcon = getMarkerFromDrawable(circleDrawable!!)
+        if(markerDriver != null){
+            markerDriver?.remove()
+        }
+        markerDriver = googleMap?.addMarker(
+            MarkerOptions()
+                .position(latLng)
+                .anchor(0.5f, 0.5f)
+                .rotation(angle.toFloat())
+                .flat(true)
+                .icon(markerIcon)
+        )
+    }
+
+    //Esto se ejecuta cada vez que se mueve el dispositivo
+    override fun onSensorChanged(event: SensorEvent) {
+        if (event.sensor.type == Sensor.TYPE_ROTATION_VECTOR){
+            SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
+            val orientation = FloatArray(3)
+            SensorManager.getOrientation(rotationMatrix, orientation)
+            if (Math.abs(Math.toDegrees(orientation[0].toDouble()) - angle) > 0.8){
+                val bearing = Math.toDegrees(orientation[0].toDouble()).toFloat() + declination
+                updateCamera(bearing)
+            }
+            angle = Math.toDegrees(orientation[0].toDouble()).toInt()
+        }
+    }
+
+    override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
+
+    }
+
+    private fun startSensor(){
+        if (sensorManager != null){
+            sensorManager?.registerListener(this, vectSensor, SensorManager.SENSOR_STATUS_ACCURACY_LOW)
+        }
+    }
+
+    private fun stopSensor(){
+        sensorManager?.unregisterListener(this)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (!isFistTimeOnResume){
+            isFistTimeOnResume = true
+        }else{
+            startSensor()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        stopSensor()
+    }
 }
