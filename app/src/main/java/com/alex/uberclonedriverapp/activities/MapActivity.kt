@@ -28,6 +28,7 @@ import com.alex.uberclonedriverapp.fragments.ModalBottomSheetMenu
 import com.alex.uberclonedriverapp.models.Booking
 import com.alex.uberclonedriverapp.providers.AuthProvider
 import com.alex.uberclonedriverapp.providers.BookingProvider
+import com.alex.uberclonedriverapp.providers.DriverProvider
 import com.alex.uberclonedriverapp.providers.GeoProvider
 import com.alex.uberclonedriverapp.utils.Config
 import com.alex.uberclonedriverapp.utils.Constants
@@ -54,6 +55,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener, SensorEven
     private val geoProvider = GeoProvider()
     private val authProvider = AuthProvider()
     private val bookingProvider = BookingProvider()
+    private val driverProvider = DriverProvider()
     private val modalBooking = ModalBottomSheetBooking()
     private val modalMenu = ModalBottomSheetMenu()
 
@@ -105,6 +107,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener, SensorEven
         ))
 
         listenerBooking()
+        createToke()
 
         binding.btnConnect.setOnClickListener { connectDriver() }
         binding.btnDisconnect.setOnClickListener { disconnectDriver() }
@@ -130,6 +133,10 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener, SensorEven
                 }
             }
         }
+    }
+
+    private fun createToke(){
+        driverProvider.createToken(authProvider.getId())
     }
 
     private fun showModalMenu(){
