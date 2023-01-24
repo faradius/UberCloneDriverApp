@@ -18,6 +18,7 @@ import android.os.Bundle
 import android.os.CountDownTimer
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -26,10 +27,9 @@ import com.alex.uberclonedriverapp.databinding.ActivityMapBinding
 import com.alex.uberclonedriverapp.fragments.ModalBottomSheetBooking
 import com.alex.uberclonedriverapp.fragments.ModalBottomSheetMenu
 import com.alex.uberclonedriverapp.models.Booking
-import com.alex.uberclonedriverapp.providers.AuthProvider
-import com.alex.uberclonedriverapp.providers.BookingProvider
-import com.alex.uberclonedriverapp.providers.DriverProvider
-import com.alex.uberclonedriverapp.providers.GeoProvider
+import com.alex.uberclonedriverapp.models.FCMBody
+import com.alex.uberclonedriverapp.models.FCMResponse
+import com.alex.uberclonedriverapp.providers.*
 import com.alex.uberclonedriverapp.utils.Config
 import com.alex.uberclonedriverapp.utils.Constants
 import com.example.easywaylocation.EasyWayLocation
@@ -42,6 +42,9 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.firebase.firestore.ListenerRegistration
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener, SensorEventListener{
     private var bookingListener: ListenerRegistration? = null
@@ -56,6 +59,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener, SensorEven
     private val authProvider = AuthProvider()
     private val bookingProvider = BookingProvider()
     private val driverProvider = DriverProvider()
+    private val notificationProvider = NotificationProvider()
     private val modalBooking = ModalBottomSheetBooking()
     private val modalMenu = ModalBottomSheetMenu()
 
@@ -108,6 +112,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener, SensorEven
 
         listenerBooking()
         createToke()
+        sendTestNotification()
 
         binding.btnConnect.setOnClickListener { connectDriver() }
         binding.btnDisconnect.setOnClickListener { disconnectDriver() }
@@ -133,6 +138,39 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener, SensorEven
                 }
             }
         }
+    }
+
+    private fun sendTestNotification(){
+
+        val map = HashMap<String, String>()
+        map.put("title", "TEST")
+        map.put("body", "Prueba de notificación")
+
+        val body = FCMBody(
+            to = "dlmkIs3VREqIr3cP56cfxE:APA91bEOnotcVHXXDpnK__MGjEtaP3d1h6VSh2DH7IqU7ma0XGYLSlMxuQycluwFnMoZCGsebxJJZAwLD47Ihr_t4DG1skR8M7RjZE6CNsBovb-RspPGhNk2cChP5WnU_N3AYXG-fCQm",
+            priority = "high",
+            ttl = "4500s",
+            data = map
+        )
+        notificationProvider.sendNotification(body).enqueue(object: Callback<FCMResponse>{
+            override fun onResponse(call: Call<FCMResponse>, response: Response<FCMResponse>) {
+                if (response.body() != null){
+                    if(response.body()!!.success == 1){
+                        Toast.makeText(this@MapActivity, "Se envio la notificación", Toast.LENGTH_LONG).show()
+                    }else{
+                        Toast.makeText(this@MapActivity, "No se pudo enviar la notificación", Toast.LENGTH_LONG).show()
+                    }
+                }
+                else{
+                    Toast.makeText(this@MapActivity, "Hubo un error enviando la notificación", Toast.LENGTH_LONG).show()
+                }
+            }
+
+            override fun onFailure(call: Call<FCMResponse>, t: Throwable) {
+                Log.d("Notification", "Error: ${t.message}")
+            }
+
+        })
     }
 
     private fun createToke(){
