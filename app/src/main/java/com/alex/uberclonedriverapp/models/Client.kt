@@ -11,7 +11,8 @@ data class Client(
     val lastname: String? = null,
     val email: String? = null,
     val phone: String? = null,
-    val image: String? = null
+    val image: String? = null,
+    var token: String? = null
 ) {
 
 

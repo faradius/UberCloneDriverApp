@@ -112,7 +112,6 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener, SensorEven
 
         listenerBooking()
         createToke()
-        sendTestNotification()
 
         binding.btnConnect.setOnClickListener { connectDriver() }
         binding.btnDisconnect.setOnClickListener { disconnectDriver() }
@@ -138,39 +137,6 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback,Listener, SensorEven
                 }
             }
         }
-    }
-
-    private fun sendTestNotification(){
-
-        val map = HashMap<String, String>()
-        map.put("title", "TEST")
-        map.put("body", "Prueba de notificación")
-
-        val body = FCMBody(
-            to = "dlmkIs3VREqIr3cP56cfxE:APA91bEOnotcVHXXDpnK__MGjEtaP3d1h6VSh2DH7IqU7ma0XGYLSlMxuQycluwFnMoZCGsebxJJZAwLD47Ihr_t4DG1skR8M7RjZE6CNsBovb-RspPGhNk2cChP5WnU_N3AYXG-fCQm",
-            priority = "high",
-            ttl = "4500s",
-            data = map
-        )
-        notificationProvider.sendNotification(body).enqueue(object: Callback<FCMResponse>{
-            override fun onResponse(call: Call<FCMResponse>, response: Response<FCMResponse>) {
-                if (response.body() != null){
-                    if(response.body()!!.success == 1){
-                        Toast.makeText(this@MapActivity, "Se envio la notificación", Toast.LENGTH_LONG).show()
-                    }else{
-                        Toast.makeText(this@MapActivity, "No se pudo enviar la notificación", Toast.LENGTH_LONG).show()
-                    }
-                }
-                else{
-                    Toast.makeText(this@MapActivity, "Hubo un error enviando la notificación", Toast.LENGTH_LONG).show()
-                }
-            }
-
-            override fun onFailure(call: Call<FCMResponse>, t: Throwable) {
-                Log.d("Notification", "Error: ${t.message}")
-            }
-
-        })
     }
 
     private fun createToke(){
